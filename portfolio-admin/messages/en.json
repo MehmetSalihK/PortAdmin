@@ -1,0 +1,29 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create"
+  },
+  "Projects": {
+    "pageTitle": "My Projects",
+    "pageDescription": "Discover my portfolio of projects",
+    "title": "Projects",
+    "noProjects": "No projects found"
+  },
+  "Admin": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "skills": "Skills",
+    "experiences": "Experiences",
+    "messages": "Messages"
+  }
+}
