@@ -10,10 +10,12 @@
     "create": "Create"
   },
   "Projects": {
-    "pageTitle": "My Projects",
-    "pageDescription": "Discover my portfolio of projects",
-    "title": "Projects",
-    "noProjects": "No projects found"
+    "title": "My Projects",
+    "pageTitle": "Projects - Portfolio Admin",
+    "pageDescription": "View and manage your portfolio projects",
+    "noProjects": "No projects found",
+    "viewCode": "View Code",
+    "liveDemo": "Live Demo"
   },
   "Admin": {
     "login": "Login",
