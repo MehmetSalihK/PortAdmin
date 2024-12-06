@@ -22,6 +22,11 @@ interface ProjectsPageProps {
 export default function Projects({ projects }: ProjectsPageProps) {
   const { t } = useTranslation('projects');
 
+  const formattedProjects = projects.map(project => ({
+    ...project,
+    image: project.imageUrl // Map imageUrl to image for ProjectCard
+  }));
+
   return (
     <Layout>
       <Head>
@@ -36,7 +41,7 @@ export default function Projects({ projects }: ProjectsPageProps) {
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project) => (
+            {formattedProjects.map((project) => (
               <ProjectCard key={project._id} project={project} />
             ))}
           </div>
