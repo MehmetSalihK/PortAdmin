@@ -11,9 +11,10 @@ import connectDB from '@/lib/db';
 import Project from '@/models/Project';
 import Experience from '@/models/Experience';
 import Skill from '@/models/Skill';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 import { HiArrowDown } from 'react-icons/hi';
+import { FiExternalLink, FiGithub } from 'react-icons/fi';
 
 interface HomePageProps {
   projects: Array<{
@@ -56,6 +57,65 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
   const scrollToContent = () => {
     mainRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const trackClick = async (projectId: string, type: 'demo' | 'github' | 'view') => {
+    try {
+      console.log('Tracking click:', { projectId, type });
+      const response = await fetch('/api/projects/stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId, type }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Error tracking click:', error);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Click tracked successfully:', data);
+    } catch (error) {
+      console.error('Error tracking click:', error);
+    }
+  };
+
+  const handleDemoClick = async (projectId: string, url: string) => {
+    await trackClick(projectId, 'demo');
+    window.open(url, '_blank');
+  };
+
+  const handleGithubClick = async (projectId: string, url: string) => {
+    await trackClick(projectId, 'github');
+    window.open(url, '_blank');
+  };
+
+  useEffect(() => {
+    // Tracker la vue de chaque projet visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(async (entry) => {
+        if (entry.isIntersecting) {
+          const projectId = entry.target.getAttribute('data-project-id');
+          if (projectId) {
+            await trackClick(projectId, 'view');
+            observer.unobserve(entry.target); // Ne tracker qu'une seule fois
+          }
+        }
+      });
+    });
+
+    // Observer chaque projet
+    const projectElements = document.querySelectorAll('[data-project-id]');
+    projectElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <Layout>
@@ -230,7 +290,68 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {formattedProjects.map((project) => (
-                <EnhancedProjectCard key={project._id} project={project} />
+                <motion.div
+                  key={project._id}
+                  data-project-id={project._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative bg-gradient-to-br from-[#1E1E1E] to-[#252525] rounded-xl overflow-hidden"
+                >
+                  <div className="relative aspect-video">
+                    <img
+                      src={project.imageUrl}
+                      alt={project.title}
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {project.featured && (
+                      <div className="absolute top-2 right-2 bg-yellow-500/90 text-white px-2 py-1 rounded-md text-sm font-medium flex items-center gap-1">
+                        <FiStar className="w-4 h-4" />
+                        <span>Featured</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {project.title}
+                    </h3>
+                    <p className="text-gray-400 mb-4">
+                      {project.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.technologies.map((tech, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-[#2A2A2A] text-gray-300 rounded-full text-sm"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {project.demoUrl && (
+                        <button
+                          onClick={() => handleDemoClick(project._id, project.demoUrl)}
+                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                        >
+                          <FiExternalLink className="w-5 h-5" />
+                          <span>Demo</span>
+                        </button>
+                      )}
+                      {project.githubUrl && (
+                        <button
+                          onClick={() => handleGithubClick(project._id, project.githubUrl)}
+                          className="flex items-center gap-2 text-gray-400 hover:text-gray-300 transition-colors duration-200"
+                        >
+                          <FiGithub className="w-5 h-5" />
+                          <span>GitHub</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>

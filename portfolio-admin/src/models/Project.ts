@@ -1,5 +1,57 @@
 import mongoose from 'mongoose';
 
+const DailyStatsSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true,
+  },
+  demoClicks: {
+    type: Number,
+    default: 0,
+  },
+  githubClicks: {
+    type: Number,
+    default: 0,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const ClickHistorySchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['demo', 'github', 'view'],
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const StatsSchema = new mongoose.Schema({
+  demoClicks: {
+    type: Number,
+    default: 0,
+  },
+  githubClicks: {
+    type: Number,
+    default: 0,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  lastClicked: {
+    type: Date,
+    default: null,
+  },
+  clickHistory: [ClickHistorySchema],
+  dailyStats: [DailyStatsSchema],
+});
+
 const ProjectSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -10,19 +62,34 @@ const ProjectSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a description for this project.'],
   },
-  technologies: [{
-    type: String,
-    required: [true, 'Please provide at least one technology.'],
-  }],
   imageUrl: {
     type: String,
     required: [true, 'Please provide an image URL for this project.'],
   },
-  demoUrl: String,
-  githubUrl: String,
+  technologies: [{
+    type: String,
+    required: true,
+  }],
+  demoUrl: {
+    type: String,
+  },
+  githubUrl: {
+    type: String,
+  },
   featured: {
     type: Boolean,
     default: false,
+  },
+  stats: {
+    type: StatsSchema,
+    default: () => ({
+      demoClicks: 0,
+      githubClicks: 0,
+      views: 0,
+      lastClicked: null,
+      clickHistory: [],
+      dailyStats: [],
+    }),
   },
   order: {
     type: Number,

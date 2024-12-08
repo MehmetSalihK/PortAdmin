@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiX, FiEye, FiGithub, FiExternalLink, FiStar, FiEdit2, FiTrash2, FiLoader } from 'react-icons/fi';
+import { FiPlus, FiX, FiEye, FiGithub, FiExternalLink, FiStar, FiEdit2, FiTrash2, FiLoader, FiFolder, FiUpload } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 interface Skill {
   _id: string;
@@ -41,6 +42,9 @@ export default function ProjectsPage() {
     githubUrl: '',
     featured: false
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -145,6 +149,7 @@ export default function ProjectsPage() {
     });
     setSelectedSkills([]);
     setEditingProject(null);
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,6 +190,39 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'upload');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, imageUrl: data.url }));
+      setImagePreview(URL.createObjectURL(file));
+      toast.success('Image uploadée avec succès');
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      toast.error('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageUpload(e.target.files[0]);
+    }
+  };
+
   // Grouper les skills par catégorie
   const groupedSkills = skills.reduce((acc, skill) => {
     if (!acc[skill.category]) {
@@ -216,7 +254,7 @@ export default function ProjectsPage() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
-            <FiStar className="w-8 h-8 text-gray-300" />
+            <FiFolder className="w-8 h-8 text-gray-300" />
             <h1 className="text-2xl font-bold text-white">Projects</h1>
           </div>
           <motion.button
@@ -243,11 +281,15 @@ export default function ProjectsPage() {
               {/* Image Container avec overlay */}
               <div className="relative aspect-video overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
-                <motion.img
-                  src={project.imageUrl}
-                  alt={project.title}
-                  className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={project.imageUrl}
+                    alt={project.title}
+                    fill
+                    className="object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                </div>
                 
                 {/* Boutons d'action flottants */}
                 <div className="absolute top-3 right-3 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -488,16 +530,108 @@ export default function ProjectsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Image URL
+                      Image du projet
                     </label>
-                    <input
-                      type="url"
-                      name="imageUrl"
-                      value={formData.imageUrl}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 bg-[#252525] text-white rounded border border-[#2A2A2A] focus:border-[#404040] focus:outline-none transition-colors duration-200"
-                      required
-                    />
+                    <div className="space-y-4">
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setUploadType('url')}
+                          className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                            uploadType === 'url'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-[#2A2A2A] text-gray-300 hover:bg-[#333333]'
+                          }`}
+                        >
+                          URL
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUploadType('file')}
+                          className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                            uploadType === 'file'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-[#2A2A2A] text-gray-300 hover:bg-[#333333]'
+                          }`}
+                        >
+                          Upload
+                        </button>
+                      </div>
+
+                      {uploadType === 'url' ? (
+                        <input
+                          type="url"
+                          name="imageUrl"
+                          value={formData.imageUrl}
+                          onChange={handleChange}
+                          placeholder="https://example.com/image.jpg"
+                          className="w-full px-3 py-2 bg-[#252525] text-white rounded border border-[#2A2A2A] focus:border-[#404040] focus:outline-none transition-colors duration-200"
+                          required
+                        />
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                              id="image-upload"
+                              disabled={isUploading}
+                            />
+                            <label
+                              htmlFor="image-upload"
+                              className={`
+                                flex items-center justify-center w-full px-4 py-6 border-2 border-dashed
+                                rounded-lg cursor-pointer transition-colors duration-200
+                                ${isUploading
+                                  ? 'border-gray-600 bg-[#1A1A1A] cursor-not-allowed'
+                                  : 'border-[#2A2A2A] hover:border-[#404040] bg-[#252525]'
+                                }
+                              `}
+                            >
+                              {isUploading ? (
+                                <div className="flex items-center gap-2 text-gray-400">
+                                  <FiLoader className="w-5 h-5 animate-spin" />
+                                  <span>Upload en cours...</span>
+                                </div>
+                              ) : (
+                                <div className="text-center">
+                                  <FiUpload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                  <p className="text-sm text-gray-300">
+                                    Cliquez ou glissez une image ici
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    PNG, JPG, GIF jusqu'à 5MB
+                                  </p>
+                                </div>
+                              )}
+                            </label>
+                          </div>
+
+                          {(imagePreview || formData.imageUrl) && (
+                            <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                              <Image
+                                src={imagePreview || formData.imageUrl}
+                                alt="Prévisualisation"
+                                fill
+                                className="object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setImagePreview(null);
+                                  setFormData(prev => ({ ...prev, imageUrl: '' }));
+                                }}
+                                className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 text-white hover:bg-red-500 transition-colors duration-200"
+                              >
+                                <FiX className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
