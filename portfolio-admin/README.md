@@ -12,6 +12,7 @@
 
 - [À propos](#-à-propos)
 - [Fonctionnalités](#-fonctionnalités)
+- [Interface d'administration](#-interface-dadministration)
 - [Technologies](#-technologies)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
@@ -23,9 +24,15 @@
 
 ## 🎯 À propos
 
-Portfolio Admin est un dashboard moderne et intuitif pour gérer votre portfolio en ligne. Il offre une interface élégante et sécurisée pour gérer vos projets, expériences, et contenu de manière efficace.
+Portfolio Admin est une solution "no-code" pour gérer votre portfolio en ligne. Plus besoin de modifier le code source pour mettre à jour votre site ! Grâce à une interface d'administration intuitive, vous pouvez modifier tout le contenu de votre portfolio en quelques clics.
 
 ## ✨ Fonctionnalités
+
+- 🎨 **Gestion No-Code**
+  - Modification du contenu sans toucher au code
+  - Interface utilisateur intuitive
+  - Mise à jour en temps réel
+  - Prévisualisation des changements
 
 - 🔐 **Authentification Sécurisée**
   - NextAuth.js pour la gestion des sessions
@@ -33,22 +40,48 @@ Portfolio Admin est un dashboard moderne et intuitif pour gérer votre portfolio
   - Authentification GitHub
 
 - 📊 **Gestion des Projets**
-  - CRUD complet des projets
-  - Upload d'images avec Cloudinary
-  - Statistiques de visualisation
-  - Système de tracking des interactions
+  - Ajout/Modification/Suppression de projets sans coder
+  - Upload d'images avec prévisualisation
+  - Organisation par drag & drop (à venir)
+  - Gestion des catégories
 
 - 📝 **Gestion du Contenu**
-  - Éditeur de texte riche
-  - Mise en forme avancée
-  - Gestion des sections de la page d'accueil
-  - Personnalisation complète
+  - Éditeur de texte riche intuitif
+  - Mise en forme avancée (gras, italique, couleurs...)
+  - Modification des sections de la page d'accueil
+  - Personnalisation des liens sociaux
 
-- 📈 **Statistiques et Analytics**
-  - Suivi des vues par projet
-  - Tracking des clics
-  - Historique des interactions
-  - Données en temps réel
+## 💻 Interface d'Administration
+
+L'interface d'administration vous permet de :
+
+### 1. Page d'Accueil
+- Modifier le titre principal
+- Personnaliser le sous-titre
+- Éditer la section "À propos"
+- Gérer vos liens sociaux (GitHub, LinkedIn, Twitter)
+
+### 2. Projets
+- Ajouter de nouveaux projets
+- Modifier les projets existants
+- Supprimer des projets
+- Réorganiser l'ordre d'affichage
+
+### 3. Mise en Forme du Texte
+Notre éditeur de texte riche permet de :
+- Mettre en gras, italique, souligné
+- Changer la couleur du texte
+- Créer des listes à puces
+- Aligner le texte (gauche, centre, droite)
+- Ajouter des titres et sous-titres
+
+### 4. Gestion des Médias
+- Upload d'images pour les projets
+- Redimensionnement automatique
+- Optimisation des images
+- Gestion de la galerie
+
+Toutes ces modifications se font directement depuis l'interface d'administration, sans avoir besoin de toucher au code !
 
 ## 🛠 Technologies
 
@@ -221,5 +254,5 @@ npm test
 ```
 
 <div align="center">
-  <p>Développé avec Mehmet Salih Kuscu pour une gestion de portfolio efficace</p>
+  <p>Développé par Mehmet Salih Kuscu pour une gestion de portfolio efficace et sans code</p>
 </div>
