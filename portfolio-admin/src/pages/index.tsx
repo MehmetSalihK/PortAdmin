@@ -11,6 +11,7 @@ import connectDB from '@/lib/db';
 import Project from '@/models/Project';
 import Experience from '@/models/Experience';
 import Skill from '@/models/Skill';
+import HomePage from '@/models/HomePage';
 import { useRef, useEffect } from 'react';
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 import { HiArrowDown } from 'react-icons/hi';
@@ -42,9 +43,20 @@ interface HomePageProps {
     level: number;
     category: string;
   }>;
+  homeData: {
+    title: string;
+    subtitle: string;
+    aboutTitle: string;
+    aboutText: string;
+    socialLinks: {
+      github: string;
+      linkedin: string;
+      twitter: string;
+    };
+  };
 }
 
-export default function Home({ projects, experiences, skills }: HomePageProps) {
+export default function Home({ projects, experiences, skills, homeData }: HomePageProps) {
   const { t } = useTranslation(['common', 'home']);
   const { scrollYProgress } = useScroll();
   const mainRef = useRef<HTMLDivElement>(null);
@@ -60,7 +72,6 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
 
   const trackClick = async (projectId: string, type: 'demo' | 'github' | 'view') => {
     try {
-      console.log('Tracking click:', { projectId, type });
       const response = await fetch('/api/projects/stats', {
         method: 'POST',
         headers: {
@@ -70,15 +81,12 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        console.error('Error tracking click:', error);
         return;
       }
 
-      const data = await response.json();
-      console.log('Click tracked successfully:', data);
+      await response.json();
     } catch (error) {
-      console.error('Error tracking click:', error);
+      // Silently handle error
     }
   };
 
@@ -93,20 +101,18 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
   };
 
   useEffect(() => {
-    // Tracker la vue de chaque projet visible
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(async (entry) => {
         if (entry.isIntersecting) {
           const projectId = entry.target.getAttribute('data-project-id');
           if (projectId) {
             await trackClick(projectId, 'view');
-            observer.unobserve(entry.target); // Ne tracker qu'une seule fois
+            observer.unobserve(entry.target);
           }
         }
       });
     });
 
-    // Observer chaque projet
     const projectElements = document.querySelectorAll('[data-project-id]');
     projectElements.forEach((element) => {
       observer.observe(element);
@@ -147,7 +153,7 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6"
           >
-            {t('home:hero.title')}
+            {homeData.title}
           </motion.h1>
           
           <motion.p
@@ -156,7 +162,7 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto"
           >
-            {t('home:hero.subtitle')}
+            {homeData.subtitle}
           </motion.p>
 
           <motion.div
@@ -166,10 +172,10 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
             className="flex flex-wrap justify-center gap-4 mb-12"
           >
             <Button href="#projects" variant="primary" size="lg">
-              {t('home:hero.projectsButton')}
+              Voir mes projets
             </Button>
             <Button href="#contact" variant="outline" size="lg">
-              {t('home:hero.contactButton')}
+              Me contacter
             </Button>
           </motion.div>
 
@@ -179,17 +185,42 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
             transition={{ duration: 0.5, delay: 0.9 }}
             className="flex justify-center space-x-6"
           >
-            {[FaGithub, FaLinkedin, FaTwitter].map((Icon, index) => (
+            {homeData.socialLinks.github && (
               <motion.a
-                key={index}
                 whileHover={{ scale: 1.2, y: -2 }}
                 whileTap={{ scale: 0.9 }}
-                href="#"
+                href={homeData.socialLinks.github}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
               >
-                <Icon className="w-6 h-6" />
+                <FaGithub className="w-6 h-6" />
               </motion.a>
-            ))}
+            )}
+            {homeData.socialLinks.linkedin && (
+              <motion.a
+                whileHover={{ scale: 1.2, y: -2 }}
+                whileTap={{ scale: 0.9 }}
+                href={homeData.socialLinks.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
+              >
+                <FaLinkedin className="w-6 h-6" />
+              </motion.a>
+            )}
+            {homeData.socialLinks.twitter && (
+              <motion.a
+                whileHover={{ scale: 1.2, y: -2 }}
+                whileTap={{ scale: 0.9 }}
+                href={homeData.socialLinks.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
+              >
+                <FaTwitter className="w-6 h-6" />
+              </motion.a>
+            )}
           </motion.div>
         </motion.div>
 
@@ -223,10 +254,10 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
               className="max-w-3xl mx-auto text-center"
             >
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-                {t('home:about.title')}
+                {homeData.aboutTitle}
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                {t('home:about.description')}
+                {homeData.aboutText}
               </p>
             </motion.div>
           </div>
@@ -494,15 +525,29 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
   try {
     await connectDB();
 
+    // Récupérer les données de la page d'accueil
+    let homeData = await HomePage.findOne().lean();
+    if (!homeData) {
+      // Utiliser les données par défaut si aucune donnée n'existe
+      homeData = {
+        title: 'Bienvenue sur mon Portfolio',
+        subtitle: 'Développeur Full Stack passionné par la création d\'applications web modernes et performantes',
+        aboutTitle: 'À propos de moi',
+        aboutText: 'Je suis un développeur Full Stack passionné par la création d\'applications web innovantes. Avec une solide expérience dans le développement front-end et back-end, je m\'efforce de créer des solutions élégantes et performantes qui répondent aux besoins des utilisateurs.',
+        socialLinks: {
+          github: '',
+          linkedin: '',
+          twitter: ''
+        }
+      };
+    }
+
     const projects = await Project.find({}).lean();
     const experiences = await Experience.find({}).sort({ startDate: -1 }).lean();
     
     // Récupérer uniquement les skills visibles
     const skills = await Skill.find({ isVisible: true }).sort({ level: -1 }).lean();
     
-    // Log pour déboguer
-    console.log('Skills récupérés:', skills.length);
-
     // Utiliser une locale par défaut si non fournie
     const currentLocale = locale || 'fr';
 
@@ -511,12 +556,12 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
         projects: JSON.parse(JSON.stringify(projects)),
         experiences: JSON.parse(JSON.stringify(experiences)),
         skills: JSON.parse(JSON.stringify(skills)),
+        homeData: JSON.parse(JSON.stringify(homeData)),
         ...(await serverSideTranslations(currentLocale, ['common', 'home', 'projects', 'experiences'])),
       },
       revalidate: 60,
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
     const currentLocale = locale || 'fr';
     
     return {
@@ -524,6 +569,17 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
         projects: [],
         experiences: [],
         skills: [],
+        homeData: {
+          title: 'Bienvenue sur mon Portfolio',
+          subtitle: 'Développeur Full Stack passionné par la création d\'applications web modernes et performantes',
+          aboutTitle: 'À propos de moi',
+          aboutText: 'Je suis un développeur Full Stack passionné par la création d\'applications web innovantes. Avec une solide expérience dans le développement front-end et back-end, je m\'efforce de créer des solutions élégantes et performantes qui répondent aux besoins des utilisateurs.',
+          socialLinks: {
+            github: '',
+            linkedin: '',
+            twitter: ''
+          }
+        },
         ...(await serverSideTranslations(currentLocale, ['common', 'home', 'projects', 'experiences'])),
       },
       revalidate: 60,

@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
-import dbConnect from '@/lib/dbConnect';
-import Project from '@/models/Project';
+import dbConnect from '../../../lib/dbConnect';
+import Project from '../../../models/Project';
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,7 +36,6 @@ export default async function handler(
           return project;
         });
 
-        console.log('Projects with stats:', projectsWithStats); // Debug log
         return res.status(200).json(projectsWithStats);
 
       default:
@@ -44,7 +43,6 @@ export default async function handler(
         return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
   } catch (error) {
-    console.error('API Error:', error);
     return res.status(500).json({ error: 'Erreur serveur' });
   }
 }

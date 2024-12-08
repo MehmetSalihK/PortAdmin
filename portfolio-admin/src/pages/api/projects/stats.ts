@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '@/lib/dbConnect';
-import Project from '@/models/Project';
+import dbConnect from '../../../lib/dbConnect';
+import Project from '../../../models/Project';
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,12 +57,20 @@ export default async function handler(
     project.stats.lastClicked = new Date();
 
     // Ajouter à l'historique des clics
+    if (!Array.isArray(project.stats.clickHistory)) {
+      project.stats.clickHistory = [];
+    }
+
     project.stats.clickHistory.push({
       type,
       timestamp: new Date()
     });
 
     // Mettre à jour les stats quotidiennes
+    if (!Array.isArray(project.stats.dailyStats)) {
+      project.stats.dailyStats = [];
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -102,15 +110,14 @@ export default async function handler(
     // Sauvegarder les modifications
     await project.save();
 
-    console.log('Updated project stats:', project.stats); // Debug log
-
     return res.status(200).json({ 
       success: true,
       stats: project.stats 
     });
 
   } catch (error) {
-    console.error('Error updating stats:', error);
-    return res.status(500).json({ error: 'Erreur lors de la mise à jour des stats' });
+    return res.status(500).json({ 
+      error: 'Erreur lors de la mise à jour des stats'
+    });
   }
 }

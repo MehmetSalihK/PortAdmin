@@ -14,6 +14,17 @@ const nextConfig = {
       'via.placeholder.com'
     ],
   },
+  // Désactiver les logs du terminal
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
+  onDemandEntries: {
+    // Désactiver les logs de compilation
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
 };
 
 module.exports = withNextIntl(nextConfig);
