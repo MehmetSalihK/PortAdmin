@@ -1,36 +1,225 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 Portfolio Admin Dashboard
 
-## Getting Started
+<div align="center">
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-14.0.0-black.svg)](https://nextjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0.0-blue.svg)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3.0-38B2AC.svg)](https://tailwindcss.com/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-green.svg)](https://www.mongodb.com/)
+</div>
 
-First, run the development server:
+## 📋 Table des matières
 
+- [À propos](#-à-propos)
+- [Fonctionnalités](#-fonctionnalités)
+- [Technologies](#-technologies)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Structure du projet](#-structure-du-projet)
+- [API Routes](#-api-routes)
+- [État du projet](#-état-du-projet)
+- [Améliorations prévues](#-améliorations-prévues)
+- [Dépannage](#-dépannage)
+
+## 🎯 À propos
+
+Portfolio Admin est un dashboard moderne et intuitif pour gérer votre portfolio en ligne. Il offre une interface élégante et sécurisée pour gérer vos projets, expériences, et contenu de manière efficace.
+
+## ✨ Fonctionnalités
+
+- 🔐 **Authentification Sécurisée**
+  - NextAuth.js pour la gestion des sessions
+  - Protection des routes admin
+  - Authentification GitHub
+
+- 📊 **Gestion des Projets**
+  - CRUD complet des projets
+  - Upload d'images avec Cloudinary
+  - Statistiques de visualisation
+  - Système de tracking des interactions
+
+- 📝 **Gestion du Contenu**
+  - Éditeur de texte riche
+  - Mise en forme avancée
+  - Gestion des sections de la page d'accueil
+  - Personnalisation complète
+
+- 📈 **Statistiques et Analytics**
+  - Suivi des vues par projet
+  - Tracking des clics
+  - Historique des interactions
+  - Données en temps réel
+
+## 🛠 Technologies
+
+### Frontend
+- **Framework:** Next.js 14
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Éditeur:** Tiptap
+- **State Management:** React Context
+- **Animations:** Framer Motion
+
+### Backend
+- **Database:** MongoDB
+- **Authentication:** NextAuth.js
+- **File Upload:** Cloudinary
+- **API:** Next.js API Routes
+
+### Outils de développement
+- **Linting:** ESLint
+- **Formatting:** Prettier
+- **Version Control:** Git
+- **API Testing:** Postman
+
+## 💻 Installation
+
+1. Cloner le projet
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone [votre-repo]
+cd portfolio-admin
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Installer les dépendances
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Configurer les variables d'environnement
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Lancer le serveur de développement
+```bash
+npm run dev
+```
 
-## Learn More
+## ⚙️ Configuration
 
-To learn more about Next.js, take a look at the following resources:
+### Variables d'Environnement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+# MongoDB
+MONGODB_URI=votre_uri_mongodb
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=votre_secret
 
-## Deploy on Vercel
+# GitHub OAuth
+GITHUB_ID=votre_github_id
+GITHUB_SECRET=votre_github_secret
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=votre_cloud_name
+CLOUDINARY_API_KEY=votre_api_key
+CLOUDINARY_API_SECRET=votre_api_secret
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📁 Structure du projet
+
+```
+portfolio-admin/
+├── public/
+├── src/
+│   ├── components/         # Composants React
+│   │   ├── layouts/       # Layouts réutilisables
+│   │   ├── ui/           # Composants d'interface
+│   │   └── admin/        # Composants admin
+│   ├── lib/              # Utilitaires et configurations
+│   ├── models/           # Modèles MongoDB
+│   ├── pages/            # Pages Next.js
+│   │   ├── api/         # Routes API
+│   │   └── admin/       # Pages admin
+│   └── styles/           # Styles globaux
+├── public/               # Assets statiques
+└── types/               # Types TypeScript
+```
+
+## 🔄 API Routes
+
+### Projets
+- `GET /api/projects` - Liste des projets
+- `POST /api/projects` - Créer un projet
+- `PUT /api/projects/:id` - Mettre à jour un projet
+- `DELETE /api/projects/:id` - Supprimer un projet
+
+### Statistiques
+- `POST /api/projects/stats` - Enregistrer une interaction
+- `GET /api/projects/stats/:id` - Obtenir les stats d'un projet
+
+### Contenu
+- `GET /api/homepage` - Obtenir le contenu de la page d'accueil
+- `POST /api/homepage` - Mettre à jour le contenu
+
+## 📊 État du projet
+
+- ✅ Authentification sécurisée
+- ✅ Gestion des projets
+- ✅ Upload d'images
+- ✅ Statistiques de base
+- ✅ Éditeur de texte riche
+- 🚧 Analytics avancés
+- 🚧 Dashboard de statistiques
+- 🚧 Optimisation des performances
+
+## 🚀 Améliorations prévues
+
+### Performance
+- [ ] Mise en cache des requêtes API
+- [ ] Optimisation des images
+- [ ] Server-side rendering amélioré
+- [ ] Pagination côté serveur
+
+### Fonctionnalités
+- [ ] Export des statistiques
+- [ ] Filtres de recherche avancés
+- [ ] Système de tags pour les projets
+- [ ] Prévisualisation en direct
+
+### UI/UX
+- [ ] Mode clair/sombre
+- [ ] Interface drag and drop
+- [ ] Animations améliorées
+- [ ] Responsive design optimisé
+
+## 🔧 Dépannage
+
+### Problèmes courants
+
+1. **Erreur de connexion MongoDB**
+```bash
+# Vérifier la connexion
+npm run check-db
+
+# Nettoyer le cache
+npm run clean
+```
+
+2. **Problèmes d'upload**
+- Vérifier les credentials Cloudinary
+- Augmenter la limite de taille des fichiers
+- Vérifier les formats supportés
+
+3. **Erreurs d'authentification**
+- Vérifier les variables d'environnement
+- Nettoyer les cookies
+- Vérifier la configuration NextAuth
+
+### Maintenance
+
+```bash
+# Vérifier les dépendances
+npm audit
+
+# Mettre à jour les packages
+npm update
+
+# Lancer les tests
+npm test
+```
+
+<div align="center">
+  <p>Développé avec Mehmet Salih Kuscu pour une gestion de portfolio efficace</p>
+</div>

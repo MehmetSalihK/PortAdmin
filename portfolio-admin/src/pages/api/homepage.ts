@@ -36,6 +36,13 @@ export default async function handler(
           { $set: updateData },
           { new: true, upsert: true }
         );
+
+        // Revalider la page d'accueil
+        try {
+          await res.revalidate('/');
+        } catch (err) {
+          console.error('Erreur lors de la revalidation:', err);
+        }
         
         return res.status(200).json(updatedHomePage);
 

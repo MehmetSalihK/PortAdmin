@@ -16,6 +16,7 @@ import { useRef, useEffect } from 'react';
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 import { HiArrowDown } from 'react-icons/hi';
 import { FiExternalLink, FiGithub } from 'react-icons/fi';
+import parse from 'html-react-parser';
 
 interface HomePageProps {
   projects: Array<{
@@ -56,7 +57,19 @@ interface HomePageProps {
   };
 }
 
-export default function Home({ projects, experiences, skills, homeData }: HomePageProps) {
+const defaultHomeData = {
+  title: 'Bienvenue sur mon Portfolio',
+  subtitle: 'Développeur Full Stack passionné par la création d\'applications web modernes et performantes',
+  aboutTitle: 'À propos de moi',
+  aboutText: 'Je suis un développeur Full Stack passionné par la création d\'applications web innovantes. Avec une solide expérience dans le développement front-end et back-end, je m\'efforce de créer des solutions élégantes et performantes qui répondent aux besoins des utilisateurs.',
+  socialLinks: {
+    github: '',
+    linkedin: '',
+    twitter: ''
+  }
+};
+
+export default function Home({ projects, experiences, skills, homeData = defaultHomeData }: HomePageProps) {
   const { t } = useTranslation(['common', 'home']);
   const { scrollYProgress } = useScroll();
   const mainRef = useRef<HTMLDivElement>(null);
@@ -244,22 +257,12 @@ export default function Home({ projects, experiences, skills, homeData }: HomePa
 
       <main ref={mainRef}>
         {/* About Section */}
-        <section id="about" className="py-20 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="max-w-3xl mx-auto text-center"
-            >
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-                {homeData.aboutTitle}
-              </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                {homeData.aboutText}
-              </p>
-            </motion.div>
+        <section id="about" className="w-full py-20 px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8">{homeData.aboutTitle}</h2>
+            <div className="text-lg text-gray-400 prose prose-invert max-w-none">
+              {parse(homeData.aboutText)}
+            </div>
           </div>
         </section>
 
@@ -522,6 +525,8 @@ export default function Home({ projects, experiences, skills, homeData }: HomePa
 }
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  const currentLocale = locale || 'fr';
+
   try {
     await connectDB();
 
@@ -529,27 +534,14 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
     let homeData = await HomePage.findOne().lean();
     if (!homeData) {
       // Utiliser les données par défaut si aucune donnée n'existe
-      homeData = {
-        title: 'Bienvenue sur mon Portfolio',
-        subtitle: 'Développeur Full Stack passionné par la création d\'applications web modernes et performantes',
-        aboutTitle: 'À propos de moi',
-        aboutText: 'Je suis un développeur Full Stack passionné par la création d\'applications web innovantes. Avec une solide expérience dans le développement front-end et back-end, je m\'efforce de créer des solutions élégantes et performantes qui répondent aux besoins des utilisateurs.',
-        socialLinks: {
-          github: '',
-          linkedin: '',
-          twitter: ''
-        }
-      };
+      homeData = defaultHomeData;
     }
 
     const projects = await Project.find({}).lean();
     const experiences = await Experience.find({}).sort({ startDate: -1 }).lean();
     
-    // Récupérer uniquement les skills visibles
-    const skills = await Skill.find({ isVisible: true }).sort({ level: -1 }).lean();
-    
-    // Utiliser une locale par défaut si non fournie
-    const currentLocale = locale || 'fr';
+    // Récupérer les compétences groupées par catégorie
+    const skills = await Skill.find({}).sort({ level: -1 }).lean();
 
     return {
       props: {
@@ -562,27 +554,16 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
       revalidate: 60,
     };
   } catch (error) {
-    const currentLocale = locale || 'fr';
-    
+    console.error('Error in getStaticProps:', error);
     return {
       props: {
         projects: [],
         experiences: [],
         skills: [],
-        homeData: {
-          title: 'Bienvenue sur mon Portfolio',
-          subtitle: 'Développeur Full Stack passionné par la création d\'applications web modernes et performantes',
-          aboutTitle: 'À propos de moi',
-          aboutText: 'Je suis un développeur Full Stack passionné par la création d\'applications web innovantes. Avec une solide expérience dans le développement front-end et back-end, je m\'efforce de créer des solutions élégantes et performantes qui répondent aux besoins des utilisateurs.',
-          socialLinks: {
-            github: '',
-            linkedin: '',
-            twitter: ''
-          }
-        },
+        homeData: defaultHomeData,
         ...(await serverSideTranslations(currentLocale, ['common', 'home', 'projects', 'experiences'])),
       },
       revalidate: 60,
     };
   }
-}
+};

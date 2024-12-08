@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import { toast } from 'react-hot-toast';
+import RichTextEditor from '@/components/RichTextEditor';
 
 interface HomePageData {
   _id?: string;
@@ -49,7 +50,6 @@ export default function HomePageAdmin() {
       const response = await fetch('/api/homepage');
       if (!response.ok) throw new Error('Erreur lors du chargement des données');
       const fetchedData = await response.json();
-      // Fusionner les données récupérées avec les données par défaut
       setData({
         ...defaultData,
         ...fetchedData,
@@ -171,12 +171,9 @@ export default function HomePageAdmin() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Texte "À propos"
                 </label>
-                <textarea
-                  name="aboutText"
-                  value={data.aboutText}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-4 py-2 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:outline-none focus:border-blue-500"
+                <RichTextEditor
+                  content={data.aboutText}
+                  onChange={(content) => setData(prev => ({ ...prev, aboutText: content }))}
                 />
               </div>
             </div>
