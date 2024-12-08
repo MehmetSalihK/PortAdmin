@@ -1,74 +1,35 @@
-import { useState } from 'react';
-import { GetServerSideProps } from 'next';
-import { getServerSession } from 'next-auth/next';
-import Head from 'next/head';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import AdminLayout from '@/components/layouts/AdminLayout';
 import { FiPlus } from 'react-icons/fi';
-import * as Icons from 'react-icons/fa';
-import { authOptions } from '@/pages/api/auth/[...nextauth]';
-import AdminLayout from '@/components/admin/Layout';
-import DataTable from '@/components/admin/DataTable';
-import DeleteConfirmation from '@/components/admin/DeleteConfirmation';
-import SkillForm from '@/components/admin/skills/SkillForm';
-import connectDB from '@/lib/db';
-import Skill from '@/models/Skill';
+import { motion } from 'framer-motion';
 
-interface SkillsPageProps {
-  initialSkills: any[];
+interface Skill {
+  _id: string;
+  name: string;
 }
 
-export default function SkillsPage({ initialSkills }: SkillsPageProps) {
-  const [skills, setSkills] = useState(initialSkills);
+export default function SkillsPage() {
+  const router = useRouter();
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [skillToDelete, setSkillToDelete] = useState<any>(null);
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [editingSkill, setEditingSkill] = useState<any>(null);
+  const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
 
-  const columns = [
-    {
-      key: 'name',
-      label: 'Name',
-      render: (value: string, skill: any) => (
-        <div className="flex items-center">
-          {skill.icon && Icons[skill.icon as keyof typeof Icons] ? (
-            <span className="mr-2">
-              {Icons[skill.icon as keyof typeof Icons]({
-                className: 'w-5 h-5 text-gray-500 dark:text-gray-400',
-              })}
-            </span>
-          ) : null}
-          <span>{value}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      render: (value: string) => (
-        <span className="capitalize">{value}</span>
-      ),
-    },
-    {
-      key: 'level',
-      label: 'Level',
-      render: (value: number) => (
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div
-            className="bg-primary-600 h-2.5 rounded-full"
-            style={{ width: `${value}%` }}
-          ></div>
-        </div>
-      ),
-    },
-    {
-      key: 'ordering',
-      label: 'Order',
-    },
-  ];
-
-  const handleEdit = (skill: any) => {
-    setEditingSkill(skill);
-    setFormModalOpen(true);
+  const fetchSkills = async () => {
+    try {
+      const response = await fetch('/api/skills');
+      if (response.ok) {
+        const data = await response.json();
+        setSkills(data);
+      }
+    } catch (error) {
+      console.error('Error fetching skills:', error);
+    }
   };
+
+  useEffect(() => {
+    fetchSkills();
+  }, []);
 
   const handleDelete = async () => {
     if (!skillToDelete) return;
@@ -78,148 +39,110 @@ export default function SkillsPage({ initialSkills }: SkillsPageProps) {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete skill');
+      if (response.ok) {
+        setSkills((prev) =>
+          prev.filter((skill) => skill._id !== skillToDelete._id)
+        );
+        setDeleteModalOpen(false);
+        setSkillToDelete(null);
       }
-
-      setSkills((prev) =>
-        prev.filter((skill) => skill._id !== skillToDelete._id)
-      );
-      setDeleteModalOpen(false);
-      setSkillToDelete(null);
     } catch (error) {
       console.error('Error deleting skill:', error);
-      // Handle error (show toast notification, etc.)
-    }
-  };
-
-  const handleFormSubmit = async (data: any) => {
-    try {
-      if (editingSkill) {
-        // Update existing skill
-        const response = await fetch(`/api/skills/${editingSkill._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update skill');
-        }
-
-        const updatedSkill = await response.json();
-        setSkills((prev) =>
-          prev.map((s) => (s._id === editingSkill._id ? updatedSkill : s))
-        );
-      } else {
-        // Create new skill
-        const response = await fetch('/api/skills', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create skill');
-        }
-
-        const newSkill = await response.json();
-        setSkills((prev) => [...prev, newSkill]);
-      }
-
-      setFormModalOpen(false);
-      setEditingSkill(null);
-    } catch (error) {
-      console.error('Error saving skill:', error);
-      // Handle error (show toast notification, etc.)
     }
   };
 
   return (
     <AdminLayout>
-      <Head>
-        <title>Manage Skills - Admin Dashboard</title>
-      </Head>
-
-      <div className="py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Skills
-          </h1>
-          <button
-            type="button"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            onClick={() => {
-              setEditingSkill(null);
-              setFormModalOpen(true);
-            }}
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Skills</h1>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/admin/skills/new')}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
-            <FiPlus className="-ml-1 mr-2 h-5 w-5" />
-            Add Skill
-          </button>
+            <FiPlus className="mr-2" /> Add Skill
+          </motion.button>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-          <DataTable
-            columns={columns}
-            data={skills}
-            onEdit={handleEdit}
-            onDelete={(skill) => {
-              setSkillToDelete(skill);
-              setDeleteModalOpen(true);
-            }}
-          />
+        <div className="bg-[#1E1E1E] rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#252525]">
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
+                    NAME
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
+                    ACTIONS
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#2A2A2A]">
+                {skills.map((skill) => (
+                  <motion.tr
+                    key={skill._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="hover:bg-[#252525] cursor-pointer"
+                    onClick={() => router.push(`/admin/skills/${skill._id}`)}
+                  >
+                    <td className="px-6 py-4 text-sm text-white">
+                      {skill.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-white">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/admin/skills/${skill._id}/edit`);
+                        }}
+                        className="text-blue-500 hover:text-blue-600 mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSkillToDelete(skill);
+                          setDeleteModalOpen(true);
+                        }}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <DeleteConfirmation
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setSkillToDelete(null);
-        }}
-        onConfirm={handleDelete}
-        title="Delete Skill"
-        message={`Are you sure you want to delete "${skillToDelete?.name}"? This action cannot be undone.`}
-      />
-
-      <SkillForm
-        isOpen={formModalOpen}
-        onClose={() => {
-          setFormModalOpen(false);
-          setEditingSkill(null);
-        }}
-        onSubmit={handleFormSubmit}
-        initialData={editingSkill}
-        title={editingSkill ? 'Edit Skill' : 'Add Skill'}
-      />
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-bold mb-4">
+              Are you sure you want to delete "{skillToDelete?.name}"?
+            </h2>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="text-gray-500 hover:text-gray-600 mr-3"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-red-500 hover:text-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
-      },
-    };
-  }
-
-  await connectDB();
-
-  const skills = await Skill.find({}).sort({ category: 1, ordering: 1 }).lean();
-
-  return {
-    props: {
-      initialSkills: JSON.parse(JSON.stringify(skills)),
-    },
-  };
-};

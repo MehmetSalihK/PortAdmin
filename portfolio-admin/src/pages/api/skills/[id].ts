@@ -54,8 +54,45 @@ export default async function handler(
         return res.status(500).json({ message: 'Failed to update skill' });
       }
 
+    case 'PATCH':
+      try {
+        const { isVisible } = req.body;
+        
+        // Vérifier que isVisible est un booléen
+        if (typeof isVisible !== 'boolean') {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid visibility value' 
+          });
+        }
+
+        const skill = await Skill.findByIdAndUpdate(
+          id, 
+          { isVisible }, 
+          { new: true, runValidators: true }
+        );
+
+        if (!skill) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Skill not found' 
+          });
+        }
+
+        return res.status(200).json({ 
+          success: true, 
+          data: skill 
+        });
+      } catch (error) {
+        console.error('Error updating skill visibility:', error);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Error updating skill visibility' 
+        });
+      }
+
     default:
-      res.setHeader('Allow', ['DELETE', 'PUT']);
+      res.setHeader('Allow', ['DELETE', 'PUT', 'PATCH']);
       return res.status(405).json({ message: `Method ${req.method} not allowed` });
   }
 }

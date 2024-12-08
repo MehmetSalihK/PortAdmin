@@ -1,136 +1,159 @@
-import { GetServerSideProps } from 'next';
-import { getServerSession } from 'next-auth/next';
-import Head from 'next/head';
-import { authOptions } from '../api/auth/[...nextauth]';
-import AdminLayout from '@/components/admin/Layout';
-import connectDB from '@/lib/db';
-import Project from '@/models/Project';
-import Skill from '@/models/Skill';
-import Experience from '@/models/Experience';
-import Contact from '@/models/Contact';
-import { useState, useEffect } from 'react';
-import StatsCards from '@/components/admin/StatsCards';
-import RecentActivity from '@/components/admin/RecentActivity';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import AdminLayout from '@/components/layouts/AdminLayout';
+import { motion } from 'framer-motion';
+import { FiMail, FiBriefcase, FiCode, FiFolder } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
 
-interface DashboardProps {
-  stats: {
-    projects: number;
-    skills: number;
-    experience: number;
-    unreadMessages: number;
-  };
+interface DashboardStats {
+  messages: number;
+  projects: number;
+  skills: number;
+  experiences: number;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    unreadMessages: 0,
-    totalProjects: 0,
-    totalSkills: 0,
-    totalExperiences: 0,
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [stats, setStats] = useState<DashboardStats>({
+    messages: 0,
+    projects: 0,
+    skills: 0,
+    experiences: 0
   });
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [statsResponse, activitiesResponse] = await Promise.all([
-          fetch('/api/dashboard/stats'),
-          fetch('/api/dashboard/activity'),
-        ]);
+    if (status === 'unauthenticated') {
+      router.push('/admin/login');
+    } else {
+      fetchStats();
+    }
+  }, [status]);
 
-        if (!statsResponse.ok || !activitiesResponse.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
+  const fetchStats = async () => {
+    try {
+      // Fetch actual stats from your API endpoints
+      const [messages, projects, skills, experiences] = await Promise.all([
+        fetch('/api/messages').then(res => res.json()),
+        fetch('/api/projects').then(res => res.json()),
+        fetch('/api/skills').then(res => res.json()),
+        fetch('/api/experiences').then(res => res.json())
+      ]);
 
-        const [statsData, activitiesData] = await Promise.all([
-          statsResponse.json(),
-          activitiesResponse.json(),
-        ]);
+      setStats({
+        messages: messages?.length || 0,
+        projects: projects?.length || 0,
+        skills: skills?.length || 0,
+        experiences: experiences?.length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
-        setStats(statsData);
-        setActivities(activitiesData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        // Handle error (show toast notification, etc.)
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-        </div>
-      </AdminLayout>
-    );
-  }
+  const cards = [
+    {
+      title: 'Unread Messages',
+      value: stats.messages,
+      icon: FiMail,
+      description: 'New messages from visitors',
+      color: 'from-blue-400 to-blue-600',
+      link: '/admin/messages'
+    },
+    {
+      title: 'Total Projects',
+      value: stats.projects,
+      icon: FiFolder,
+      description: 'Projects in your portfolio',
+      color: 'from-purple-400 to-purple-600',
+      link: '/admin/projects'
+    },
+    {
+      title: 'Total Skills',
+      value: stats.skills,
+      icon: FiCode,
+      description: 'Skills and technologies',
+      color: 'from-green-400 to-green-600',
+      link: '/admin/skills'
+    },
+    {
+      title: 'Total Experiences',
+      value: stats.experiences,
+      icon: FiBriefcase,
+      description: 'Work and education experiences',
+      color: 'from-orange-400 to-orange-600',
+      link: '/admin/experience'
+    }
+  ];
 
   return (
     <AdminLayout>
-      <Head>
-        <title>Dashboard - Admin Panel</title>
-      </Head>
+      <div className="p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold text-white mb-8">Dashboard</h1>
 
-      <div className="py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Dashboard
-          </h1>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {cards.map((card, index) => {
+              const Icon = card.icon;
+              return (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group cursor-pointer"
+                  onClick={() => router.push(card.link)}
+                >
+                  <div className="relative overflow-hidden bg-[#1E1E1E] rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    {/* Background Gradient */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+                    
+                    <div className="relative p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-sm text-gray-400">{card.title}</p>
+                          <h3 className="text-3xl font-bold text-white mt-1">
+                            {card.value}
+                          </h3>
+                        </div>
+                        <div className={`p-3 rounded-full bg-gradient-to-br ${card.color}`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-400">{card.description}</p>
+                      
+                      {/* Progress bar */}
+                      <div className="mt-4 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: '100%' }}
+                          transition={{ duration: 1.5, delay: index * 0.2 }}
+                          className={`h-full bg-gradient-to-r ${card.color}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
 
-        <div className="space-y-6">
-          {/* Stats Cards */}
-          <StatsCards stats={stats} />
-
-          {/* Recent Activity */}
-          <RecentActivity activities={activities} />
-        </div>
+          {/* Recent Activity Section */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
+            <div className="bg-[#1E1E1E] rounded-lg p-6">
+              <div className="space-y-4">
+                {/* Activity items would go here */}
+                <p className="text-gray-400">No recent activity to display</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </AdminLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
-      },
-    };
-  }
-
-  await connectDB();
-
-  // Fetch statistics
-  const [
-    projectCount,
-    skillCount,
-    experienceCount,
-    unreadMessageCount,
-  ] = await Promise.all([
-    Project.countDocuments(),
-    Skill.countDocuments(),
-    Experience.countDocuments(),
-    Contact.countDocuments({ status: 'new' }),
-  ]);
-
-  return {
-    props: {
-      stats: {
-        projects: projectCount,
-        skills: skillCount,
-        experience: experienceCount,
-        unreadMessages: unreadMessageCount,
-      },
-    },
-  };
-};

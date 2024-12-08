@@ -372,32 +372,39 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   try {
     await connectDB();
+
+    const projects = await Project.find({}).lean();
+    const experiences = await Experience.find({}).lean();
     
-    const [projects, experiences, skills] = await Promise.all([
-      Project.find({}).lean(),
-      Experience.find({}).sort({ startDate: -1 }).lean(),
-      Skill.find({}).sort({ level: -1 }).lean(),
-    ]);
+    // Récupérer uniquement les skills visibles
+    const skills = await Skill.find({ isVisible: true }).lean();
+
+    // Utiliser une locale par défaut si non fournie
+    const currentLocale = locale || 'fr';
 
     return {
       props: {
-        ...(await serverSideTranslations(locale ?? 'fr', ['common', 'home'])),
         projects: JSON.parse(JSON.stringify(projects)),
         experiences: JSON.parse(JSON.stringify(experiences)),
         skills: JSON.parse(JSON.stringify(skills)),
+        ...(await serverSideTranslations(currentLocale, ['common', 'home', 'projects', 'experiences'])),
       },
       revalidate: 60,
     };
   } catch (error) {
     console.error('Error fetching data:', error);
+
+    // Utiliser une locale par défaut si non fournie
+    const currentLocale = locale || 'fr';
+
     return {
       props: {
-        ...(await serverSideTranslations(locale ?? 'fr', ['common', 'home'])),
         projects: [],
         experiences: [],
         skills: [],
+        ...(await serverSideTranslations(currentLocale, ['common', 'home', 'projects', 'experiences'])),
       },
       revalidate: 60,
     };
   }
-};
+}

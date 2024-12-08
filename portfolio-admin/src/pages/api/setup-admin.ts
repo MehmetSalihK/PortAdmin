@@ -13,13 +13,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('EdaMirray.1302&', salt);
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD!, salt);
 
     // Update or create admin
     await Admin.findOneAndUpdate(
       { email: { $exists: true } },
       {
-        email: 'sketur60@admin.msk',
+        email: process.env.ADMIN_EMAIL,
         password: hashedPassword,
         name: 'Admin',
         role: 'admin',

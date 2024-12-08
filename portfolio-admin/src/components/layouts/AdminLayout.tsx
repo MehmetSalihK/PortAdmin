@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiHome, FiUser, FiBriefcase, FiCode, FiFolder, FiLogOut, FiMenu } from 'react-icons/fi';
+import { FiHome, FiUser, FiBriefcase, FiCode, FiFolder, FiLogOut, FiMenu, FiMail, FiSettings } from 'react-icons/fi';
 import { signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -18,10 +18,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const menuItems = [
     { href: '/admin', label: 'Dashboard', icon: FiHome },
-    { href: '/admin/profile', label: 'Profile', icon: FiUser },
-    { href: '/admin/experience', label: 'Experience', icon: FiBriefcase },
-    { href: '/admin/skills', label: 'Skills', icon: FiCode },
     { href: '/admin/projects', label: 'Projects', icon: FiFolder },
+    { href: '/admin/skills', label: 'Skills', icon: FiCode },
+    { href: '/admin/experience', label: 'Experience', icon: FiBriefcase },
+    { href: '/admin/messages', label: 'Messages', icon: FiMail },
+    { href: '/admin/settings', label: 'Settings', icon: FiSettings },
   ];
 
   const handleSignOut = async () => {

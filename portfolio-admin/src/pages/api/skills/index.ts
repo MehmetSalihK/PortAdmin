@@ -19,7 +19,9 @@ export default async function handler(
   switch (req.method) {
     case 'POST':
       try {
-        const skill = await Skill.create(req.body);
+        // Only keep the name field
+        const { name } = req.body;
+        const skill = await Skill.create({ name });
         return res.status(201).json(skill);
       } catch (error: any) {
         console.error('Error creating skill:', error);
@@ -30,7 +32,7 @@ export default async function handler(
 
     case 'GET':
       try {
-        const skills = await Skill.find({}).sort({ category: 1, ordering: 1 });
+        const skills = await Skill.find({});
         return res.status(200).json(skills);
       } catch (error) {
         console.error('Error fetching skills:', error);
