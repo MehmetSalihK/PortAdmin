@@ -202,9 +202,9 @@ export default function Home({ projects, experiences, skills }: HomePageProps) {
                   </h3>
                   <div className="relative w-full h-2.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                     <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${skill.level}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
+                      style={{ width: 0 }}
+                      animate={{ width: `${skill.level || 0}%` }}
+                      transition={{ duration: 1, ease: "easeOut", delay: index * 0.1 }}
                       className="absolute top-0 left-0 h-full bg-primary-500 rounded-full"
                     />
                   </div>
@@ -374,10 +374,13 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
     await connectDB();
 
     const projects = await Project.find({}).lean();
-    const experiences = await Experience.find({}).lean();
+    const experiences = await Experience.find({}).sort({ startDate: -1 }).lean();
     
     // Récupérer uniquement les skills visibles
-    const skills = await Skill.find({ isVisible: true }).lean();
+    const skills = await Skill.find({ isVisible: true }).sort({ level: -1 }).lean();
+    
+    // Log pour déboguer
+    console.log('Skills récupérés:', skills.length);
 
     // Utiliser une locale par défaut si non fournie
     const currentLocale = locale || 'fr';
@@ -393,10 +396,8 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
     };
   } catch (error) {
     console.error('Error fetching data:', error);
-
-    // Utiliser une locale par défaut si non fournie
     const currentLocale = locale || 'fr';
-
+    
     return {
       props: {
         projects: [],

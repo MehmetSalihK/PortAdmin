@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layouts/AdminLayout';
@@ -10,6 +11,8 @@ import { IconType } from 'react-icons';
 interface Skill {
   _id: string;
   name: string;
+  level: number;
+  category: string;
   isVisible: boolean;
 }
 
@@ -598,11 +601,69 @@ const groupSkillsByCategory = (skills: Skill[]): Record<SkillCategory, Skill[]> 
   return grouped as Record<SkillCategory, Skill[]>;
 };
 
+// Fonction pour détecter automatiquement la catégorie
+const detectCategory = (skillName: string): string => {
+  const name = skillName.toLowerCase();
+  
+  // Langages de programmation
+  if (name.includes('javascript') || name.includes('python') || name.includes('java') || 
+      name.includes('typescript') || name.includes('php') || name.includes('ruby') || 
+      name.includes('swift') || name.includes('kotlin') || name.includes('c++') || 
+      name.includes('c#') || name.includes('go')) {
+    return 'Langages de programmation';
+  }
+  
+  // Frameworks
+  if (name.includes('react') || name.includes('vue') || name.includes('angular') || 
+      name.includes('next') || name.includes('nuxt') || name.includes('express') || 
+      name.includes('django') || name.includes('flask') || name.includes('laravel') ||
+      name.includes('spring') || name.includes('flutter') || name.includes('tailwind')) {
+    return 'Frameworks';
+  }
+  
+  // Systèmes d'exploitation
+  if (name.includes('windows') || name.includes('linux') || name.includes('macos') || 
+      name.includes('ubuntu') || name.includes('android') || name.includes('ios')) {
+    return 'Systèmes d\'exploitation';
+  }
+  
+  // Bases de données
+  if (name.includes('sql') || name.includes('mongo') || name.includes('postgres') || 
+      name.includes('mysql') || name.includes('oracle') || name.includes('redis') ||
+      name.includes('firebase')) {
+    return 'Bases de données';
+  }
+  
+  // Outils de design
+  if (name.includes('photoshop') || name.includes('illustrator') || name.includes('figma') || 
+      name.includes('sketch') || name.includes('xd') || name.includes('after') || 
+      name.includes('premiere') || name.includes('indesign')) {
+    return 'Outils de design';
+  }
+  
+  // Outils de développement
+  if (name.includes('git') || name.includes('docker') || name.includes('vscode') || 
+      name.includes('intellij') || name.includes('eclipse') || name.includes('postman')) {
+    return 'Outils de développement';
+  }
+  
+  // Services Cloud
+  if (name.includes('aws') || name.includes('azure') || name.includes('google cloud') || 
+      name.includes('heroku') || name.includes('vercel') || name.includes('netlify')) {
+    return 'Services Cloud';
+  }
+  
+  // Par défaut
+  return 'Autres';
+};
+
 export default function SkillsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [newSkillName, setNewSkillName] = useState('');
+  const [newSkillLevel, setNewSkillLevel] = useState(50);
+  const [newSkillCategory, setNewSkillCategory] = useState('Autres');
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -690,31 +751,30 @@ export default function SkillsPage() {
 
   const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSkillName.trim()) return;
-
-    const normalizedSkillName = normalizeSkillName(newSkillName);
-
-    setIsAddingSkill(true);
+    
     try {
+      const category = detectCategory(newSkillName);
       const response = await fetch('/api/skills', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: normalizedSkillName }),
+        body: JSON.stringify({
+          name: newSkillName,
+          level: 50, // Valeur par défaut
+          category: category,
+          isVisible: true
+        }),
       });
 
-      if (response.ok) {
-        await fetchSkills();
-        setNewSkillName('');
-        setIsAddingSkill(false);
-        showToast('Skill added successfully', 'success');
-      }
+      if (!response.ok) throw new Error('Failed to add skill');
+
+      const newSkill = await response.json();
+      setSkills([...skills, newSkill]);
+      setIsAddingSkill(false);
+      setNewSkillName('');
     } catch (error) {
       console.error('Error adding skill:', error);
-      showToast('Failed to add skill', 'error');
-    } finally {
-      setIsAddingSkill(false);
     }
   };
 
@@ -742,53 +802,67 @@ export default function SkillsPage() {
   return (
     <AdminLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <FiCode className="w-8 h-8 text-blue-500" />
-            <h1 className="text-3xl font-bold text-white">Skills</h1>
+            <FiCode className="w-8 h-8 text-gray-300" />
+            <h1 className="text-2xl font-bold text-white">Skills Management</h1>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={() => setIsAddingSkill(true)}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#2A2A2A] hover:bg-[#333333] text-white rounded-lg transition-all duration-200 hover:scale-105"
           >
-            <FiPlus className="mr-2" /> Add Skill
-          </motion.button>
+            <FiPlus className="text-white" /> Add Skill
+          </button>
         </div>
 
         <div className="space-y-6">
           {Object.entries(groupSkillsByCategory(skills)).map(([category, skills]) => (
             skills.length > 0 && (
-              <div key={category} className="mb-8">
-                <h3 className="text-xl font-semibold mb-4 text-white">{category}</h3>
-                <div className="space-y-2">
-                  {skills.map((skill) => {
-                    const Icon = getSkillIcon(skill.name);
-                    return (
-                      <motion.div
-                        key={skill._id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="flex items-center justify-between bg-gray-800 p-3 rounded-lg group hover:bg-gray-700 transition-all"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Icon className="text-2xl" />
-                          <span className="text-white">{skill.name}</span>
-                        </div>
+              <motion.div
+                key={category}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-8"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <h2 className="text-xl font-semibold text-white">{category}</h2>
+                  <span className="text-sm text-gray-400">({skills.length})</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {skills.map((skill, index) => (
+                    <motion.div
+                      key={skill._id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="bg-[#1E1E1E] rounded-lg p-3 shadow-lg border border-[#2A2A2A] hover:border-[#3A3A3A] transition-all duration-200 hover:shadow-xl group"
+                    >
+                      <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
+                          {(() => {
+                            const Icon = getSkillIcon(skill.name);
+                            return Icon && <Icon className="text-xl text-gray-300 group-hover:text-white transition-colors duration-200" />;
+                          })()}
+                          <h3 className="text-sm font-medium text-white group-hover:text-white transition-colors duration-200">
+                            {skill.name}
+                          </h3>
+                        </div>
+                        <div className="flex gap-1">
                           {/* Bouton de visibilité */}
                           <button
                             onClick={() => toggleSkillVisibility(skill._id, !skill.isVisible)}
-                            className={`p-2 rounded-full transition-colors ${
+                            className={`p-1.5 rounded-lg transition-all duration-200 ${
                               skill.isVisible 
-                                ? 'bg-green-600 hover:bg-green-700' 
-                                : 'bg-gray-600 hover:bg-gray-700'
+                                ? 'bg-[#2A2A2A] hover:bg-[#333333] hover:scale-110' 
+                                : 'bg-[#1A1A1A] hover:bg-[#222222] hover:scale-110'
                             }`}
                             title={skill.isVisible ? 'Visible sur le portfolio' : 'Masqué sur le portfolio'}
                           >
-                            {skill.isVisible ? <FiEye className="text-white" /> : <FiEyeOff className="text-white" />}
+                            {skill.isVisible ? 
+                              <FiEye className="text-gray-300 hover:text-white transition-colors duration-200 w-4 h-4" /> : 
+                              <FiEyeOff className="text-gray-500 hover:text-white transition-colors duration-200 w-4 h-4" />
+                            }
                           </button>
                           {/* Bouton de suppression */}
                           <button
@@ -796,159 +870,95 @@ export default function SkillsPage() {
                               setSkillToDelete(skill);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="text-red-500 p-2 rounded-full hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
+                            className="p-1.5 rounded-lg bg-[#2A2A2A] hover:bg-[#333333] text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
+                            title="Supprimer"
                           >
-                            <FiTrash2 />
+                            <FiTrash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </motion.div>
-                    );
-                  })}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </div>
+              </motion.div>
             )
           ))}
         </div>
 
         <AnimatePresence>
           {isAddingSkill && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-[#1E1E1E] rounded-lg shadow-lg p-6 w-full max-w-md"
-              >
-                <div className="flex justify-between items-center mb-6">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-[#1E1E1E] rounded-lg p-6 w-full max-w-md">
+                <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold text-white">Add New Skill</h2>
                   <button
                     onClick={() => setIsAddingSkill(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors duration-200"
                   >
-                    <FiX size={24} />
+                    <FiX className="text-xl" />
                   </button>
                 </div>
-
                 <form onSubmit={handleAddSkill}>
-                  <div className="mb-6">
-                    <label className="block text-gray-400 text-sm font-medium mb-2">
+                  <div className="mb-4">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Skill Name
                     </label>
                     <input
                       type="text"
                       value={newSkillName}
                       onChange={(e) => setNewSkillName(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#252525] text-white rounded border border-[#2A2A2A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      placeholder="Enter skill name"
+                      className="w-full px-3 py-2 bg-[#252525] text-white rounded border border-[#2A2A2A] focus:border-[#404040] focus:outline-none transition-colors duration-200"
+                      placeholder="Enter skill name (e.g., React, Python, Photoshop)"
                       required
                     />
                   </div>
-
                   <div className="flex justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => setIsAddingSkill(false)}
-                      className="px-4 py-2 text-gray-400 hover:text-white"
+                      className="px-4 py-2 text-gray-400 hover:text-white transition-colors duration-200"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      disabled={isAddingSkill}
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                      className="px-4 py-2 bg-[#2A2A2A] hover:bg-[#333333] text-white rounded-lg transition-colors duration-200"
                     >
-                      {isAddingSkill ? 'Adding...' : 'Add Skill'}
+                      Add Skill
                     </button>
                   </div>
                 </form>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
 
-          {isDeleteModalOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-[#1E1E1E] rounded-lg shadow-lg p-6 w-full max-w-md"
-              >
-                <h2 className="text-xl font-bold text-white mb-4">Delete Skill</h2>
-                <p className="text-gray-400 mb-6">
-                  Are you sure you want to delete "{skillToDelete?.name}"?
-                </p>
-
-                <div className="flex justify-end gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setIsDeleteModalOpen(false);
-                      setSkillToDelete(null);
-                    }}
-                    className="px-6 py-2 bg-gradient-to-r from-red-700 to-red-800 text-white rounded hover:from-red-800 hover:to-red-900 transition-all duration-200"
-                  >
-                    No
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleDelete}
-                    className="px-6 py-2 bg-gradient-to-r from-emerald-700 to-emerald-800 text-white rounded hover:from-emerald-800 hover:to-emerald-900 transition-all duration-200"
-                  >
-                    Yes
-                  </motion.button>
+          {isDeleteModalOpen && skillToDelete && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-[#1E1E1E] rounded-lg p-6 w-full max-w-md">
+                <div className="flex items-center mb-4">
+                  <FiAlertCircle className="text-red-400 text-2xl mr-3" />
+                  <h2 className="text-xl font-bold text-white">Delete Skill</h2>
                 </div>
-              </motion.div>
-            </motion.div>
+                <p className="text-gray-300 mb-6">
+                  Are you sure you want to delete "{skillToDelete.name}"? This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDelete()}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
-
-          {/* Toast Notifications */}
-          <div className="fixed bottom-4 right-4 space-y-2 pointer-events-none">
-            <AnimatePresence>
-              {toasts.map((toast) => (
-                <motion.div
-                  key={toast.id}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 100 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 20
-                  }}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg ${
-                    toast.type === 'success' 
-                      ? 'bg-gradient-to-r from-emerald-800 to-emerald-900' 
-                      : 'bg-gradient-to-r from-red-700 to-red-800'
-                  } backdrop-blur-sm`}
-                >
-                  <div className="flex items-center gap-3">
-                    {toast.type === 'success' ? (
-                      <div className="bg-emerald-600 p-1 rounded-full">
-                        <FiCheck className="text-white w-4 h-4" />
-                      </div>
-                    ) : (
-                      <div className="bg-red-600 p-1 rounded-full">
-                        <FiAlertCircle className="text-white w-4 h-4" />
-                      </div>
-                    )}
-                    <span className="text-white font-medium text-sm tracking-wide">{toast.message}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
         </AnimatePresence>
       </div>
     </AdminLayout>

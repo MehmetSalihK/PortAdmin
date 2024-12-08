@@ -6,7 +6,13 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['res.cloudinary.com'],
+    domains: [
+      'res.cloudinary.com',
+      'cdn.futura-sciences.com',
+      'images.unsplash.com',
+      'picsum.photos',
+      'via.placeholder.com'
+    ],
   },
 };
 

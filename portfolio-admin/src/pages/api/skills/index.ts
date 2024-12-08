@@ -10,18 +10,17 @@ export default async function handler(
 ) {
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
   await connectDB();
 
   switch (req.method) {
     case 'POST':
+      if (!session) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
       try {
-        // Only keep the name field
         const { name } = req.body;
-        const skill = await Skill.create({ name });
+        const skill = await Skill.create({ name, isVisible: true });
         return res.status(201).json(skill);
       } catch (error: any) {
         console.error('Error creating skill:', error);
@@ -32,7 +31,10 @@ export default async function handler(
 
     case 'GET':
       try {
-        const skills = await Skill.find({});
+        // Si l'utilisateur est connecté, renvoyer tous les skills
+        // Sinon, renvoyer uniquement les skills visibles
+        const filter = session ? {} : { isVisible: true };
+        const skills = await Skill.find(filter).sort({ level: -1 });
         return res.status(200).json(skills);
       } catch (error) {
         console.error('Error fetching skills:', error);

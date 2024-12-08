@@ -6,6 +6,7 @@ import { FiHome, FiUser, FiBriefcase, FiCode, FiFolder, FiLogOut, FiMenu, FiMail
 import { signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -153,6 +154,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           className="min-h-screen p-6"
         >
           {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+              success: {
+                duration: 3000,
+              },
+              error: {
+                duration: 4000,
+              },
+            }}
+          />
         </motion.div>
       </main>
     </div>
